@@ -7,7 +7,8 @@ import (
 )
 
 type GoroutinesStackParser struct {
-	ctx context.Context
+	ctx               context.Context
+	execludedPatterns []*regexp.Regexp
 }
 
 type GoroutineStackReport struct {
@@ -17,25 +18,41 @@ type GoroutineStackReport struct {
 	CreatedByGoroutineId string
 	CreatedAtFilePath    string
 	CreatedAtLine        string
-	Stack                string
+	FullStackString      string
 }
 
 var (
-	headerRe    = regexp.MustCompile(`^goroutine (\d+) \[([^\]]+)\]:`)
-	createdByRe = regexp.MustCompile(`created by ([^\s]+)(?: in goroutine (\d+))?\n\s+([^\n]+):(\d+)`)
+	headerRe               = regexp.MustCompile(`(?m)^goroutine (\d+) \[([^\]]+)\]:`)
+	createdByRe            = regexp.MustCompile(`created by ([^\s]+)(?: in goroutine (\d+))?\n\s+([^\n]+):(\d+)`)
+	defaultExcludePatterns = []string{
+		`^runtime\.`,
+		`^syscall\.`,
+		`\bsyscall\b`,
+		`github\.com/fadygamilm/go-leak-detector/internal/monitor`,
+		`github\.com/prometheus/client_golang`,
+	}
 )
 
-func New(ctx context.Context) *GoroutinesStackParser {
+func New(ctx context.Context, excludePatterns []string) *GoroutinesStackParser {
+	var compiledPatterns []*regexp.Regexp
+	allPatterns := append(defaultExcludePatterns, excludePatterns...)
+	for _, pattern := range allPatterns {
+		if re, err := regexp.Compile(pattern); err == nil {
+			compiledPatterns = append(compiledPatterns, re)
+		}
+	}
 	return &GoroutinesStackParser{
-		ctx: ctx,
+		ctx:               ctx,
+		execludedPatterns: compiledPatterns,
 	}
 }
 
 func (gsp *GoroutinesStackParser) Parse(buf []byte, lengthOfWrittenBytes int) []GoroutineStackReport {
 	stackStr := string(buf[:lengthOfWrittenBytes])
+	// log.Println("the stack trace is: ", stackStr)
 	// indeices will have the start, end+1 index of each found pattern
 	indices := headerRe.FindAllStringIndex(stackStr, -1)
-	routinesReports := make([]GoroutineStackReport, len(indices))
+	routinesReports := []GoroutineStackReport{}
 	for i := range indices {
 		start := indices[i][0]
 		var end int
@@ -46,12 +63,29 @@ func (gsp *GoroutinesStackParser) Parse(buf []byte, lengthOfWrittenBytes int) []
 		}
 		m := stackStr[start:end]
 		// each gorouutine in the stack printed by the runtime ends with two \n\n so i have to trim the suffix spaces before appending the results
-		routinesReports[i] = gsp.ParseSingleRoutineStack(strings.TrimSuffix(m, "\n\n"))
+		trimmedM := strings.TrimSuffix(m, "\n\n")
 
+		if !gsp.shouldInclude(trimmedM) {
+			continue
+		}
+
+		report := gsp.ParseSingleRoutineStack(trimmedM)
+		if report.Id != "" {
+			routinesReports = append(routinesReports, report)
+		}
 	}
 	return routinesReports
 }
 
+func (gsp *GoroutinesStackParser) shouldInclude(routine string) bool {
+	for _, re := range gsp.execludedPatterns {
+		if re.MatchString(routine) {
+			return false
+		}
+	}
+
+	return true
+}
 func (gsp *GoroutinesStackParser) ParseSingleRoutineStack(routine string) GoroutineStackReport {
 	report := GoroutineStackReport{}
 
