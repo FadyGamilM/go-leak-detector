@@ -9,6 +9,7 @@ import (
 type GoroutinesStackParser struct {
 	ctx context.Context
 }
+
 type GoroutineStackReport struct {
 	Id                   string
 	Status               string
@@ -19,6 +20,11 @@ type GoroutineStackReport struct {
 	Stack                string
 }
 
+var (
+	headerRe    = regexp.MustCompile(`^goroutine (\d+) \[([^\]]+)\]:`)
+	createdByRe = regexp.MustCompile(`created by ([^\s]+)(?: in goroutine (\d+))?\n\s+([^\n]+):(\d+)`)
+)
+
 func New(ctx context.Context) *GoroutinesStackParser {
 	return &GoroutinesStackParser{
 		ctx: ctx,
@@ -27,10 +33,9 @@ func New(ctx context.Context) *GoroutinesStackParser {
 
 func (gsp *GoroutinesStackParser) Parse(buf []byte, lengthOfWrittenBytes int) []GoroutineStackReport {
 	stackStr := string(buf[:lengthOfWrittenBytes])
-	re := regexp.MustCompile(`(?m)^goroutine \d+ \[`)
 	// indeices will have the start, end+1 index of each found pattern
-	indices := re.FindAllStringIndex(stackStr, -1)
-	routines := make([]GoroutineStackReport, len(indices))
+	indices := headerRe.FindAllStringIndex(stackStr, -1)
+	routinesReports := make([]GoroutineStackReport, len(indices))
 	for i := range indices {
 		start := indices[i][0]
 		var end int
@@ -41,16 +46,14 @@ func (gsp *GoroutinesStackParser) Parse(buf []byte, lengthOfWrittenBytes int) []
 		}
 		m := stackStr[start:end]
 		// each gorouutine in the stack printed by the runtime ends with two \n\n so i have to trim the suffix spaces before appending the results
-		routines[i] = gsp.ParseSingleRoutineStack(strings.TrimSuffix(m, "\n\n"))
+		routinesReports[i] = gsp.ParseSingleRoutineStack(strings.TrimSuffix(m, "\n\n"))
 
 	}
-	return routines
+	return routinesReports
 }
 
 func (gsp *GoroutinesStackParser) ParseSingleRoutineStack(routine string) GoroutineStackReport {
 	report := GoroutineStackReport{}
-	headerRe := regexp.MustCompile(`^goroutine (\d+) \[([^\]]+)\]:`)
-	createdByRe := regexp.MustCompile(`created by ([^\s]+)(?: in goroutine (\d+))?\n\s+([^\n]+):(\d+)`)
 
 	lines := strings.SplitN(routine, "\n", 2)
 	report.Id, report.Status = "", ""
