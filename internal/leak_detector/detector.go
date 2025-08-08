@@ -2,6 +2,7 @@ package leakdetector
 
 import (
 	"context"
+	"time"
 
 	"github.com/fadygamilm/go-leak-detector/internal/parser"
 )
@@ -11,6 +12,7 @@ type LeakDetector struct {
 	ctx           context.Context
 	PrevSnapshots map[string][]parser.GoroutineStackReport
 	LeakThreshold int
+	FirstSeen     map[string]time.Time
 }
 
 func New(ctx context.Context, leakThreshold int) *LeakDetector {
@@ -18,15 +20,23 @@ func New(ctx context.Context, leakThreshold int) *LeakDetector {
 		ctx:           ctx,
 		PrevSnapshots: make(map[string][]parser.GoroutineStackReport),
 		LeakThreshold: leakThreshold,
+		FirstSeen:     make(map[string]time.Time),
 	}
 }
 
-func (ld *LeakDetector) DetectLeaks(goroutinesReports []parser.GoroutineStackReport) []parser.GoroutineStackReport {
+func (ld *LeakDetector) DetectLeaks(goroutinesReports []parser.GoroutineStackReport) ([]parser.GoroutineStackReport, map[string]time.Duration) {
 	leakedRoutines := []parser.GoroutineStackReport{}
 	currentSnapshot := make(map[string]parser.GoroutineStackReport, len(goroutinesReports))
+	leaksDurations := make(map[string]time.Duration)
 
 	for _, report := range goroutinesReports {
 		currentSnapshot[report.Id] = report
+
+		// If this is the first time seeing the goroutine, record the timestamp
+		if _, exists := ld.FirstSeen[report.Id]; !exists {
+			ld.FirstSeen[report.Id] = time.Now()
+		}
+
 		ld.PrevSnapshots[report.Id] = append(ld.PrevSnapshots[report.Id], report)
 
 		if len(ld.PrevSnapshots[report.Id]) >= ld.LeakThreshold {
@@ -40,6 +50,7 @@ func (ld *LeakDetector) DetectLeaks(goroutinesReports []parser.GoroutineStackRep
 			}
 			if isLeak {
 				leakedRoutines = append(leakedRoutines, report)
+				leaksDurations[report.Id] = time.Since(ld.FirstSeen[report.Id])
 			}
 		}
 	}
@@ -48,9 +59,10 @@ func (ld *LeakDetector) DetectLeaks(goroutinesReports []parser.GoroutineStackRep
 	for id := range ld.PrevSnapshots {
 		if _, exists := currentSnapshot[id]; !exists {
 			delete(ld.PrevSnapshots, id)
+			delete(ld.FirstSeen, id)
 		}
 
 	}
 
-	return leakedRoutines
+	return leakedRoutines, leaksDurations
 }
