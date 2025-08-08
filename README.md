@@ -1,6 +1,8 @@
 ## Overview
 Go Leak Detector continuously monitors your application's goroutines and identifies potential memory leaks by tracking goroutines that remain in the same state across multiple snapshots. It provides real-time detection with detailed reporting and Prometheus metrics integration.
 
+<img width="6896" height="6760" alt="image" src="https://github.com/user-attachments/assets/9bc92b37-35fd-400f-ae30-5d67e0fcbb55" />
+
 ## Features
 - Real-time Detection: Continuously monitors goroutines with configurable intervals
 - Prometheus Integration: Built-in metrics for monitoring and alerting
