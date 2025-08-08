@@ -79,77 +79,82 @@ The detector exposes the following Prometheus metrics at `/metrics`:
 ## Example of the main.go output logs: 
 ```shell
  go run cmd/example/main.go
-2025/08/09 00:15:39 ⚠️ Found 4 goroutine leaks:
-2025/08/09 00:15:39 Goroutine ID: 1
+2025/08/09 01:21:55 ⚠️ Found 4 goroutine leaks:
+2025/08/09 01:21:55 Goroutine ID: 1
 Status: select (no cases)
 Created By:  (Goroutine ID: )
 Created At: :
 
 
-2025/08/09 00:15:39 Goroutine ID: 27
+2025/08/09 01:21:55 Goroutine ID: 44
 Status: chan receive
 Created By: main.main (Goroutine ID: 1)
 Created At: /Users/fady/projects/sandbox/go-leak-detector/cmd/example/main.go:32
 
 
-2025/08/09 00:15:39 Goroutine ID: 28
+2025/08/09 01:21:55 Goroutine ID: 45
 Status: chan receive
 Created By: main.main (Goroutine ID: 1)
 Created At: /Users/fady/projects/sandbox/go-leak-detector/cmd/example/main.go:33
 
 
-2025/08/09 00:15:39 Goroutine ID: 29
+2025/08/09 01:21:55 Goroutine ID: 50
 Status: chan receive
-Created By: github.com/fadygamilm/go-leak-detector/pkg/goleak.(*GoLeakMonitor).StartPrometheusServer (Goroutine ID: 25)
+Created By: github.com/FadyGamilM/go-leak-detector/pkg/goleak.(*GoLeakMonitor).StartPrometheusServer (Goroutine ID: 42)
 Created At: /Users/fady/projects/sandbox/go-leak-detector/pkg/goleak/prometheus.go:15
 
 
-2025/08/09 00:15:44 ⚠️ Found 4 goroutine leaks:
-2025/08/09 00:15:44 Goroutine ID: 1
+2025/08/09 01:22:00 ⚠️ Found 4 goroutine leaks:
+2025/08/09 01:22:00 Goroutine ID: 1
 Status: select (no cases)
 Created By:  (Goroutine ID: )
 Created At: :
 
 
-2025/08/09 00:15:44 Goroutine ID: 27
+2025/08/09 01:22:00 Goroutine ID: 44
 Status: chan receive
 Created By: main.main (Goroutine ID: 1)
 Created At: /Users/fady/projects/sandbox/go-leak-detector/cmd/example/main.go:32
 
 
-2025/08/09 00:15:44 Goroutine ID: 28
+2025/08/09 01:22:00 Goroutine ID: 45
 Status: chan receive
 Created By: main.main (Goroutine ID: 1)
 Created At: /Users/fady/projects/sandbox/go-leak-detector/cmd/example/main.go:33
 
 
-2025/08/09 00:15:44 Goroutine ID: 29
+2025/08/09 01:22:00 Goroutine ID: 50
 Status: chan receive
-Created By: github.com/fadygamilm/go-leak-detector/pkg/goleak.(*GoLeakMonitor).StartPrometheusServer (Goroutine ID: 25)
+Created By: github.com/FadyGamilM/go-leak-detector/pkg/goleak.(*GoLeakMonitor).StartPrometheusServer (Goroutine ID: 42)
 Created At: /Users/fady/projects/sandbox/go-leak-detector/pkg/goleak/prometheus.go:15
+```
 
-
-2025/08/09 00:15:49 ⚠️ Found 4 goroutine leaks:
-2025/08/09 00:15:49 Goroutine ID: 1
-Status: select (no cases)
-Created By:  (Goroutine ID: )
-Created At: :
-
-
-2025/08/09 00:15:49 Goroutine ID: 27
-Status: chan receive
-Created By: main.main (Goroutine ID: 1)
-Created At: /Users/fady/projects/sandbox/go-leak-detector/cmd/example/main.go:32
-
-
-2025/08/09 00:15:49 Goroutine ID: 28
-Status: chan receive
-Created By: main.main (Goroutine ID: 1)
-Created At: /Users/fady/projects/sandbox/go-leak-detector/cmd/example/main.go:33
-
-
-2025/08/09 00:15:49 Goroutine ID: 29
-Status: chan receive
-Created By: github.com/fadygamilm/go-leak-detector/pkg/goleak.(*GoLeakMonitor).StartPrometheusServer (Goroutine ID: 25)
-Created At: /Users/fady/projects/sandbox/go-leak-detector/pkg/goleak/prometheus.go:15
+## Example of the `metrics/` endpoint setuped to be used for prometheus :
+```shell
+ curl http://localhost:9091/metrics
+# HELP goleak_detection_time_seconds Time taken to detect leaks.
+# TYPE goleak_detection_time_seconds summary
+goleak_detection_time_seconds_sum 0.007834749
+goleak_detection_time_seconds_count 6
+# HELP goleak_goroutine_count Total number of goroutines detected.
+# TYPE goleak_goroutine_count gauge
+goleak_goroutine_count 4
+# HELP goleak_leak_count Number of detected goroutine leaks.
+# TYPE goleak_leak_count gauge
+goleak_leak_count 4
+# HELP goleak_leak_duration_seconds Duration of detected goroutine leaks.
+# TYPE goleak_leak_duration_seconds histogram
+goleak_leak_duration_seconds_bucket{le="0"} 0
+goleak_leak_duration_seconds_bucket{le="10"} 0
+goleak_leak_duration_seconds_bucket{le="20"} 12
+goleak_leak_duration_seconds_bucket{le="30"} 16
+goleak_leak_duration_seconds_bucket{le="40"} 16
+goleak_leak_duration_seconds_bucket{le="50"} 16
+goleak_leak_duration_seconds_bucket{le="60"} 16
+goleak_leak_duration_seconds_bucket{le="70"} 16
+goleak_leak_duration_seconds_bucket{le="80"} 16
+goleak_leak_duration_seconds_bucket{le="90"} 16
+goleak_leak_duration_seconds_bucket{le="+Inf"} 16
+goleak_leak_duration_seconds_sum 279.985597206
+goleak_leak_duration_seconds_count 16
 ```

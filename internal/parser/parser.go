@@ -28,7 +28,7 @@ var (
 		`^runtime\.`,
 		`^syscall\.`,
 		`\bsyscall\b`,
-		`github\.com/fadygamilm/go-leak-detector/internal/monitor`,
+		`github\.com/FadyGamilM/go-leak-detector/internal/monitor`,
 		`github\.com/prometheus/client_golang`,
 	}
 )
