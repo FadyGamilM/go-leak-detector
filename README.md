@@ -12,7 +12,7 @@ Go Leak Detector continuously monitors your application's goroutines and identif
 ## Installation
 To install Go Leak Detector, use the following command:
 ```bash
-go get github.com/FadyGamilM/go-leak-detector@v1.0.1
+go get github.com/FadyGamilM/go-leak-detector@v1.0.2
 ``` 
 
 ## Usage
