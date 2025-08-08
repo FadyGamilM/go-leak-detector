@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/fadygamilm/go-leak-detector/pkg/config"
-	"github.com/fadygamilm/go-leak-detector/pkg/goleak"
+	"github.com/FadyGamilM/go-leak-detector/pkg/config"
+	"github.com/FadyGamilM/go-leak-detector/pkg/goleak"
 )
 
 func main() {

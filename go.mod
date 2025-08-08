@@ -1,4 +1,4 @@
-module github.com/fadygamilm/go-leak-detector
+module github.com/FadyGamilM/go-leak-detector
 
 go 1.24.2
 

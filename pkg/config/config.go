@@ -3,7 +3,7 @@ package config
 import (
 	"time"
 
-	"github.com/fadygamilm/go-leak-detector/internal/parser"
+	"github.com/FadyGamilM/go-leak-detector/internal/parser"
 )
 
 // Config holds configuration for the leak detector.

@@ -6,9 +6,9 @@ import (
 	"runtime"
 	"time"
 
-	leakdetector "github.com/fadygamilm/go-leak-detector/internal/leak_detector"
-	"github.com/fadygamilm/go-leak-detector/internal/parser"
-	"github.com/fadygamilm/go-leak-detector/pkg/config"
+	leakdetector "github.com/FadyGamilM/go-leak-detector/internal/leak_detector"
+	"github.com/FadyGamilM/go-leak-detector/internal/parser"
+	"github.com/FadyGamilM/go-leak-detector/pkg/config"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

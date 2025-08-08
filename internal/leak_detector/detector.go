@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/fadygamilm/go-leak-detector/internal/parser"
+	"github.com/FadyGamilM/go-leak-detector/internal/parser"
 )
 
 // simply this pkg will track the go routines from the current run to the previous run, and if we found the same goroutine in the previous snapshot run with same status, we will consider it a lean (a stuck go routine) and we will report it.
